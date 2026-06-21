@@ -151,7 +151,7 @@ cd Jenji
 ```bash
 # Using conda
 conda env create -f environment.yml
-conda activate jenji
+conda activate EDU
 ```
 
 **Dependencies include:**

@@ -29,6 +29,16 @@ const ImageDetectionComponent = () => {
 
   const navigate = useNavigate();
 
+  const ObjectMap: Record<number, string> = {
+    0: "OxygenTank",
+    1: "NitrogenTank",
+    2: "FirstAidBox",
+    3: "FireAlarm",
+    4: "SafetySwitchPanel",
+    5: "EmergencyPhone",
+    6: "FireExtinguisher",
+  };
+
   // Initialize WebSocket connection
   useEffect(() => {
     const newSocket = io("http://localhost:8080", {
@@ -46,22 +56,25 @@ const ImageDetectionComponent = () => {
       setSocketConnected(false);
     });
 
-    newSocket.on("response_back", (data: { frame: string; detections: Detection[] }) => {
-      console.log("Received detection result:", data);
-      setIsProcessing(false);
-      
-      // Add the processed image to the results
-      setProcessedImages((prev) => {
-        const newImage: ProcessedImage = {
-          id: `processed-${Date.now()}-${Math.random()}`,
-          originalFile: new File([], "processed"), // Placeholder
-          processedFrame: data.frame,
-          detections: data.detections,
-          timestamp: Date.now(),
-        };
-        return [...prev, newImage].slice(-3); // Keep only last 3
-      });
-    });
+    newSocket.on(
+      "response_back",
+      (data: { frame: string; detections: Detection[] }) => {
+        console.log("Received detection result:", data);
+        setIsProcessing(false);
+
+        // Add the processed image to the results
+        setProcessedImages((prev) => {
+          const newImage: ProcessedImage = {
+            id: `processed-${Date.now()}-${Math.random()}`,
+            originalFile: new File([], "processed"), // Placeholder
+            processedFrame: data.frame,
+            detections: data.detections,
+            timestamp: Date.now(),
+          };
+          return [...prev, newImage].slice(-3); // Keep only last 3
+        });
+      },
+    );
 
     return () => {
       newSocket.disconnect();
@@ -94,7 +107,7 @@ const ImageDetectionComponent = () => {
     <div className="min-h-screen w-full bg-black font-sans p-3 sm:p-5 overflow-x-hidden">
       <StarsBackground />
       <ShootingStars />
-      
+
       <button
         className="absolute top-3 left-3 sm:top-5 sm:left-5 text-base sm:text-xl text-gray-500 items-center hover:text-gray-300 transition-colors duration-150 cursor-pointer flex flex-row gap-2 z-50"
         onClick={() => navigate("/")}
@@ -115,7 +128,7 @@ const ImageDetectionComponent = () => {
                 Upload up to 3 images to detect objects
               </p>
             </div>
-            
+
             <div
               className={`text-white flex flex-row items-center gap-2 border-1 h-max px-3 sm:px-4 py-2 rounded-2xl whitespace-nowrap ${
                 socketConnected
@@ -125,10 +138,14 @@ const ImageDetectionComponent = () => {
             >
               <div
                 className={`w-2 h-2 rounded-full ${
-                  socketConnected ? "bg-emerald-400 animate-pulse" : "bg-red-400"
+                  socketConnected
+                    ? "bg-emerald-400 animate-pulse"
+                    : "bg-red-400"
                 }`}
               />
-              <span className="text-sm sm:text-base">{socketConnected ? "Connected" : "Disconnected"}</span>
+              <span className="text-sm sm:text-base">
+                {socketConnected ? "Connected" : "Disconnected"}
+              </span>
             </div>
           </div>
         </div>
@@ -144,7 +161,9 @@ const ImageDetectionComponent = () => {
         {isProcessing && processedImages.length === 0 && (
           <div className="flex flex-col items-center justify-center py-8 sm:py-12 space-y-4">
             <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin" />
-            <p className="text-gray-400 text-base sm:text-lg">Processing images...</p>
+            <p className="text-gray-400 text-base sm:text-lg">
+              Processing images...
+            </p>
           </div>
         )}
 
@@ -158,7 +177,7 @@ const ImageDetectionComponent = () => {
               </h2>
               <button
                 onClick={() => setProcessedImages([])}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white transition-all duration-200 border border-gray-700/50"
+                className="px-3 z-20 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white transition-all duration-200 border border-gray-700/50"
               >
                 Clear Results
               </button>
@@ -178,7 +197,7 @@ const ImageDetectionComponent = () => {
                       alt={`Detection result ${index + 1}`}
                       className="w-full h-full object-contain"
                     />
-                    
+
                     {/* Overlay badge */}
                     <div className="absolute top-3 left-3 px-3 py-1.5 rounded-full bg-blue-500/90 backdrop-blur-sm border border-blue-400/50 flex items-center gap-2">
                       <Activity className="w-4 h-4 text-white" />
@@ -194,7 +213,7 @@ const ImageDetectionComponent = () => {
                       <Activity className="w-4 h-4 text-cyan-400" />
                       Detected Objects
                     </h3>
-                    
+
                     <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
                       {image.detections.length > 0 ? (
                         image.detections.map((det, idx) => (
@@ -202,8 +221,8 @@ const ImageDetectionComponent = () => {
                             key={idx}
                             className="flex items-center justify-between px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/30"
                           >
-                              <span className="text-sm font-medium text-gray-300">
-                              {det.class_name ?? `Class ${det.class_Id}`}
+                            <span className="text-sm font-medium text-gray-300">
+                              {ObjectMap[det.class_Id] ?? det.class_name ?? `Unknown (${det.class_Id})`}
                             </span>
                             <div className="flex items-center gap-2">
                               <div className="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden">

@@ -31,5 +31,6 @@
 **/secrets.dev.yaml
 *.pt
 **/values.dev.yaml
+!best.pt
 LICENSE
 README.md
