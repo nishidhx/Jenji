@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: jenji
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: jenji
+
+  template:
+    metadata:
+      labels:
+        app: jenji
+
+    spec:
+      containers:
+        - name: ml
+          image: xnishidh/jenji:latest
+
+          ports:
+            - containerPort: 8080
